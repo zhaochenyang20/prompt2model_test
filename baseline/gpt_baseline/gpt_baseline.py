@@ -11,6 +11,8 @@ logging.basicConfig(level=logging.INFO)
 from prompt2model.model_executor import ModelOutput
 
 test_dataset_root = Path("/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets")
+RESULT_PATH = Path("results")
+RESULT_PATH.mkdir(parents=True, exist_ok=True)
 
 def evaluate_with_gpt(task_name):
     test_dataset = load_from_disk(test_dataset_root / f"{task_name}_gpt_model")["test"]
@@ -49,8 +51,6 @@ def evaluate_with_gpt(task_name):
             "output": outputs,
         }
     )
-    RESULT_PATH = Path("results")
-    RESULT_PATH.mkdir(parents=True, exist_ok=True)
     result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
     GPT_PREDICTIONS = [
     ModelOutput(
@@ -77,6 +77,46 @@ def main():
 
     evaluate_with_gpt(args.task_name)
 
+
+def fix_empty_response(task_name):
+    chat_api = ChatGPTAgent()
+    result_dataset = load_from_disk(RESULT_PATH / f"{task_name}_gpt_results")
+    input_cols = result_dataset["input_col"]
+    model_inputs = result_dataset["model_input"]
+    output_cols = result_dataset["output_col"]
+    model_outputs = result_dataset["model_output"]
+    outputs = result_dataset["output"]
+    for idx, each in enumerate(outputs):
+        if each == "":
+            api_call_counter = 0
+            while True:
+                try:
+                    api_call_counter += 1
+                    if api_call_counter >= 4:
+                        logging.info(f"index: {idx}")
+                        logging.info(f"input: {input_cols[idx]}")
+                        logging.info(f"output: Failed")
+                        response = ""
+                        break
+                    response = chat_api.generate_one_openai_chat_completion(model_inputs[idx]).choices[0]["message"]["content"]
+                    outputs[idx] = response
+                    logging.info(f"index: {idx}")
+                    logging.info(f"input: {input_cols[idx]}")
+                    logging.info(f"output: {response}")
+                    break
+                except OPENAI_ERRORS as e:
+                    logging.error(e)
+                    time.sleep(1)
+    result_dataset = datasets.Dataset.from_dict(
+        {
+            "input_col": input_cols,
+            "model_input": model_inputs,
+            "output_col": output_cols,
+            "model_output": model_outputs,
+            "output": outputs,
+        }
+    )
+    result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
 
 if __name__ == "__main__":
     main()
