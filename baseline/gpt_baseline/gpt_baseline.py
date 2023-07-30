@@ -10,14 +10,13 @@ import time
 logging.basicConfig(level=logging.INFO)
 from prompt2model.model_executor import ModelOutput
 
-result_path = Path("/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets")
+test_dataset_root = Path("/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets")
 
 def evaluate_with_gpt(task_name):
-    test_dataset = load_from_disk(result_path / f"{task_name}_gpt_model")
+    test_dataset = load_from_disk(test_dataset_root / f"{task_name}_gpt_model")["test"]
     chat_api = ChatGPTAgent()
     outputs = []
-    evaluate_length = 10
-    # for idx in range(len(test_dataset)):
+    evaluate_length = len(test_dataset)
     for idx in range(evaluate_length):
         api_call_counter = 0
         model_input = test_dataset[idx]["model_input"]
@@ -50,8 +49,9 @@ def evaluate_with_gpt(task_name):
             "output": outputs,
         }
     )
-    result_root = Path("results")
-    result_dataset.save_to_disk(result_root / task_name)
+    RESULT_PATH = Path("results")
+    RESULT_PATH.mkdir(parents=True, exist_ok=True)
+    result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
     GPT_PREDICTIONS = [
     ModelOutput(
         f"{example['output']}", auxiliary_info={}
@@ -59,11 +59,9 @@ def evaluate_with_gpt(task_name):
 ]
     evaluator = Seq2SeqEvaluator()
     metric_values = evaluator.evaluate_model(
-        test_dataset, "model_output", GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
+        datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
     )
     print(metric_values)
-    RESULT_PATH = Path("result")
-    RESULT_PATH.mkdir(parents=True, exist_ok=True)
     with open(RESULT_PATH / f"{task_name}.txt", "w") as result_file:
         result_file.write(f"task_name: {task_name}\n")
         for metric_name, metric_value in metric_values.items():
