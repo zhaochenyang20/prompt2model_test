@@ -10,8 +10,7 @@ from prompt2model.model_executor import GenerationModelExecutor
 logging.basicConfig(level=logging.INFO)
 
 
-def train(model_name, task_name):
-    # Read the CSV file using pandas
+def evaluate(model_name, task_name):
     logging.info(f"model: {model_name}, task: {task_name}")
     model_store_name = model_name.split("/")[-1]
     TRAINED_MODEL_ROOT = Path("/home/chenyan3/beta-test/train/result/trained_model")
@@ -19,7 +18,7 @@ def train(model_name, task_name):
         "/home/chenyan3/beta-test/train/result/trained_tokenizer"
     )
     DATASET_DICTS_STORE_ROOT = Path(
-        "/home/chenyan3/prompt2model_test/baseline/datasets"
+        "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
     )
     RESULT_PATH = Path(f"./result")
     TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
@@ -67,7 +66,7 @@ def main():
     )
     args = parser.parse_args()
 
-    train(args.model_name, args.task_name)
+    evaluate(args.model_name, args.task_name)
 
 
 if __name__ == "__main__":
