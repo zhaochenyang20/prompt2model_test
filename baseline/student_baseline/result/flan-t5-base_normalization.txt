@@ -1,0 +1,6 @@
+model_name: flan-t5-base
+task_name: normalization
+batch_size: 4
+chr_f++: 50.25710004104879
+exact_match: 0.05232558139534884
+average_bert_score: 0.8678906954998193

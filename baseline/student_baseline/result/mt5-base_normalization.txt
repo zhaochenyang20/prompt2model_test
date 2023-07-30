@@ -1,0 +1,6 @@
+model_name: mt5-base
+task_name: normalization
+batch_size: 4
+chr_f++: 50.797238009334464
+exact_match: 0.037209302325581395
+average_bert_score: 0.8660130051679389

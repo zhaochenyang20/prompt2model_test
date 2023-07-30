@@ -21,7 +21,7 @@ def train(model_name, task_name):
     DATASET_DICTS_STORE_ROOT = Path(
         "/home/chenyan3/prompt2model_test/baseline/datasets"
     )
-    RESULT_PATH = Path(f"./result/{model_store_name}_{task_name}")
+    RESULT_PATH = Path(f"./result")
     TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
     TRAINED_TOKENIZER_ROOT.mkdir(parents=True, exist_ok=True)
     RESULT_PATH.mkdir(parents=True, exist_ok=True)
