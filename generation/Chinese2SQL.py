@@ -12,7 +12,7 @@ prompt = """Chinese2SQL is an NLP task that involves converting natural language
 
 For this task, the input is a Chinese string that describes a natural language query. The output is the corresponding SQL query.
 
-Here are some example:
+Here are some examples:
 
 input="北京市的人口是多少？"
 output="SELECT population FROM cities WHERE city_name = '北京市'"

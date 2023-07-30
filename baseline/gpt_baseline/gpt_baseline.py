@@ -19,8 +19,6 @@ task_name_list = ["normalization", "NQ", "Chinese2SQL"]
 def evaluate_with_gpt(task_name):
     # Read the CSV file using pandas
     dataset = load_from_disk(result_path / task_name)
-    test_dataset = datasets.Dataset.from_dict(dataset[4000:5000])
-
     # Create the DatasetDict
     dataset_dict = DatasetDict({"test": test_dataset})
 

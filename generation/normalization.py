@@ -14,7 +14,7 @@ For this task, the input is a string contains two specific elements: a posted da
 
 The output is a string that provides a mapping between the time period references mentioned in the input and the corresponding dates. The output uses the "==" symbol to show the relationship, with the time period reference on the left and the corresponding date on the right. The date is formatted as "YYYY-MM" to represent the year and month.
 
-Here are some example:
+Here are some examples:
 
 input="[Posted: 2013-03-22] This flu season started in early December, a month earlier than usual, and peaked by the end of year."
 output="early December == 2012-12 | the end of year == 2012"
