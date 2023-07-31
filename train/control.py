@@ -7,7 +7,8 @@ logging_root = Path("logs")
 logging_root.mkdir(parents=True, exist_ok=True)
 model_name_list = ["google/flan-t5-base", "google/mt5-base"]
 # task_name_list = ["normalization", "NQ", "Chinese2SQL"]
-task_name_list = ["normalization", "normalization_filter_NA"]
+# task_name_list = ["normalization", "normalization_filter_NA"]
+task_name_list = ["normalization"]
 # NQ_model_name_list = ["domenicrosati/QA2D-t5-base", "lmqg/flan-t5-base-squad-qag"]
 
 # domenicrosati/QA2D-t5-base, lmqg/flan-t5-base-squad-qag for NQ
