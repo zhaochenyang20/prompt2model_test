@@ -17,15 +17,17 @@ def train(model_name, task_name, evaluate=True):
     # Read the CSV file using pandas
     logging.info(f"model: {model_name}, task: {task_name}")
     model_store_name = model_name.split("/")[-1]
-    DATASET_DICTS_STORE_ROOT = Path(f"./datasets/{model_store_name}_{task_name}")
-    TRAINED_MODEL_ROOT = Path("./result/trained_model")
-    TRAINED_TOKENIZER_ROOT = Path("./result/trained_tokenizer")
-    RESULT_PATH = Path(f"./result/{model_store_name}_{task_name}")
+    dataset_root = Path("../generation/generated_dataset/")
+    assert dataset_root.exists()
+    DATASET_DICTS_STORE_ROOT = dataset_root/f"{model_store_name}_{task_name}"
+    TRAINED_MODEL_ROOT = Path("/home/chenyan3/result/trained_model")
+    TRAINED_TOKENIZER_ROOT = Path("/home/chenyan3/result/trained_tokenizer")
+    RESULT_PATH = Path(f"/home/chenyan3/result/{model_store_name}_{task_name}")
     DATASET_DICTS_STORE_ROOT.mkdir(parents=True, exist_ok=True)
     TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
     TRAINED_TOKENIZER_ROOT.mkdir(parents=True, exist_ok=True)
     RESULT_PATH.mkdir(parents=True, exist_ok=True)
-    dataset = load_from_disk(f"./datasets/{task_name}")
+    dataset = load_from_disk(dataset_root/task_name)
     train_dataset = datasets.Dataset.from_dict(dataset[:3000])
     val_dataset = datasets.Dataset.from_dict(dataset[3000:4000])
     test_dataset = datasets.Dataset.from_dict(dataset[4000:5000])
@@ -37,13 +39,17 @@ def train(model_name, task_name, evaluate=True):
 
     DATASET_DICTS = [dataset_dict]
 
-    if task_name == "normalization":
-        INSTRUCTION = """People often uses some temporal date expression in dalegies. I want to know the exact date of all the temporal date expression in some sentences.
+    if "normalization" in task_name:
+        INSTRUCTION = """Temporal date expressions are commonly used to refer to specific time periods. Your task is to identify these temporal date expressions and provide the exact dates they refer to.
 
-    For this task, the input is a string contains two specific elements: a posted date as "[Posted: YYYY-MM-DD]" and a sentence or statement with a temporal date reference to a time period (e.g., early December, the end of the year, July, August, last Christmas, next Month, etc).
+For this task, the input is a string containing two specific elements: a posted date in the format "[Posted: YYYY-MM-DD]" and a sentence or statement that contains various temporal date references (e.g., early December, the end of the year, today, August, last Christmas, next Month, etc).
 
-    The output is a string that provides a mapping between the time period references mentioned in the input and the corresponding dates. The output uses the "==" symbol to show the relationship, with the time period reference on the left and the corresponding date on the right. The date is formatted as "YYYY-MM" to represent the year and month.
-    """
+Your program should output a string that maps the time period references mentioned in the input to their corresponding dates, following these strict rules:
+
+1. If temporal date references are found, the output should use either "YYYY-MM-DD", "YYYY-MM", or "YYYY" to represent the exact date.
+- If multiple time period references are found, separate them using '|'.
+2. If no temporal date reference is found or the referred date is ambiguous, the output should just be 'N/A', i.e., output="N/A".
+"""
     elif task_name == "NQ":
         INSTRUCTION = """
     Your task is to generate an answer to a natural question. In this task, the input is a question string. and the output is the corresponding answer string. The question can range from Math, Cultural, Social, Geometry, Biology, History, Sports, Technology, Science, and so on.
@@ -64,7 +70,7 @@ For this task, the input is a Chinese string that describes a natural language q
         model_name, has_encoder=True, tokenizer_max_length=1024
     )
     # model_max_length 会限制 sentence 的长度，可能会丢失一些特征
-    args_output_root = Path(f"./result/training_output/{model_store_name}_{task_name}")
+    args_output_root = Path(f"/home/chenyan3/result/training_output/{model_store_name}_{task_name}")
     args_output_root.mkdir(parents=True, exist_ok=True)
     trained_model, trained_tokenizer = trainer.train_model(
         {
