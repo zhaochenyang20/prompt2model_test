@@ -70,3 +70,18 @@ normalized_dataset = unlimited_dataset_generator.generate_dataset_split(
     prompt_spec, 5000, split=DatasetSplit.TRAIN
 )
 normalized_dataset.save_to_disk("normalized_dataset_5000")
+
+def post_filter(normalized_dataset):
+    def filter_output(example):
+        if "N/A" in example["output_col"]:
+            print(example["output_col"])
+            example["output_col"] = "N/A"
+        return example
+
+    filtered = normalized_dataset.map(filter_output)
+    NA_list = []
+    for idx, each in enumerate(filtered["output_col"]):
+        if each == "N/A":
+            print(idx)
+            NA_list.append(idx)
+    return filtered, NA_list
