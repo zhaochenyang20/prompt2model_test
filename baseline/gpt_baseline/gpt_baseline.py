@@ -26,7 +26,7 @@ def evaluate_with_gpt(task_name):
         while True:
             try:
                 api_call_counter += 1
-                if api_call_counter >= 4:
+                if api_call_counter >= 10:
                     logging.info(f"index: {idx}")
                     logging.info(f"input: {input_col}")
                     logging.info(f"output: None")
@@ -52,6 +52,8 @@ def evaluate_with_gpt(task_name):
         }
     )
     result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
+
+    # no post-filter
     GPT_PREDICTIONS = [
     ModelOutput(
         f"{example['output']}", auxiliary_info={}
@@ -63,6 +65,22 @@ def evaluate_with_gpt(task_name):
     )
     print(metric_values)
     with open(RESULT_PATH / f"{task_name}.txt", "w") as result_file:
+        result_file.write(f"task_name: {task_name}\n")
+        for metric_name, metric_value in metric_values.items():
+            result_file.write(f"{metric_name}: {metric_value}\n")
+
+    #  post-filter
+    filtered_GPT_PREDICTIONS = [
+    ModelOutput(
+        "N/A" if "N/A" in example["output"] else example["output"], auxiliary_info={}
+    ) for example in result_dataset
+]
+    evaluator = Seq2SeqEvaluator()
+    metric_values = evaluator.evaluate_model(
+        datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", filtered_GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
+    )
+    print(metric_values)
+    with open(RESULT_PATH / f"{task_name}_filtered.txt", "w") as result_file:
         result_file.write(f"task_name: {task_name}\n")
         for metric_name, metric_value in metric_values.items():
             result_file.write(f"{metric_name}: {metric_value}\n")

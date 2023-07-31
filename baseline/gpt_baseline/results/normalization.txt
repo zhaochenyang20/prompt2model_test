@@ -1,4 +1,4 @@
 task_name: normalization
-chr_f++: 36.494149178550764
-exact_match: 0.0941860465116279
-average_bert_score: 0.8375353445840437
+chr_f++: 30.658278497666956
+exact_match: 0.5
+average_bert_score: 0.9112835909738097

@@ -1,0 +1,4 @@
+task_name: normalization
+chr_f++: 29.475623111606282
+exact_match: 0.5
+average_bert_score: 0.9106712021799974

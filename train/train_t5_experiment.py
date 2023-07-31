@@ -150,7 +150,7 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             test_dataset, "model_output", new_outputs, encoder_model_name="xlm-roberta-base"
         )
         print(metric_values)
-        with open(RESULT_PATH / f"{model_store_name}_{task_name}_generated_dataset_with_filter.txt", "w") as result_file:
+        with open(RESULT_PATH / f"{model_store_name}_{task_name}_generated_dataset_with_post_filter.txt", "w") as result_file:
             result_file.write(f"model_name: {model_store_name}\n")
             result_file.write(f"task_name: {task_name}\n")
             result_file.write(f"batch_size: {BATCH_SIZE}\n")
