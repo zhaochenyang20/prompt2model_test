@@ -135,5 +135,18 @@ def fix_empty_response(task_name):
     )
     result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
 
+def test_nq():
+    result_dataset= load_from_disk(RESULT_PATH / "NQ_gpt_results")
+    from datasets import load_dataset
+    dataset = load_dataset("nq_open", split="validation")
+    right_num = 0
+    for idx, output in enumerate(result_dataset["output"]):
+        print(output)
+        if output in dataset[idx]["answer"]:
+            right_num += 1
+    print(right_num / len(result_dataset))
+
+
+
 if __name__ == "__main__":
     main()

@@ -163,19 +163,19 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
         test_dataset = load_from_disk(
         realistic_dataset_root / f"{task_name}_student_model"
     )["test"]
-        BATCH_SIZE = 4
+        BATCH_SIZE = 100
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         t5_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
 TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
         ).to(device)
         t5_tokenizer = transformers.AutoTokenizer.from_pretrained(TRAINED_TOKENIZER_ROOT / f"{model_store_name}_{task_name}")
         model_executor = GenerationModelExecutor(
-            t5_model, t5_tokenizer, BATCH_SIZE, tokenizer_max_length=1024, sequence_max_length=1280
+            t5_model, t5_tokenizer, BATCH_SIZE, tokenizer_max_length=256, sequence_max_length=512
         )
 
 
         # No post-filter
-        t5_outputs = model_executor.make_prediction(test_set=test_dataset, input_column="model_input")
+        t5_outputs = model_executor.make_prediction(test_set=datasets.Dataset.from_dict(test_dataset[:3000]), input_column="model_input")
         test_dataset = datasets.Dataset.from_dict(
             {
                 'input_col': test_dataset['input_col'],
@@ -228,6 +228,23 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             result_file.write(f"batch_size: {BATCH_SIZE}\n")
             for metric_name, metric_value in metric_values.items():
                 result_file.write(f"{metric_name}: {metric_value}\n")
+
+def test_nq(model_name, task_name):
+    logging.info(f"model: {model_name}, task: {task_name}")
+    model_store_name = model_name.split("/")[-1]
+    dataset_root = Path("../generation/generated_dataset/")
+    assert dataset_root.exists()
+    DATASET_DICTS_STORE_ROOT = dataset_root/f"{model_store_name}_{task_name}"
+    result_dataset =  load_from_disk(f"{str(DATASET_DICTS_STORE_ROOT)}_real_dataset_without_post_filter")
+    from datasets import load_dataset
+    dataset = load_dataset("nq_open", split="validation")
+    right_num = 0
+    for idx, output in enumerate(result_dataset["output"]):
+        print(output)
+        if output in dataset[idx]["answer"]:
+            right_num += 1
+    print(right_num / len(result_dataset))
+
 
 def main():
     parser = argparse.ArgumentParser(description="Train the generation model.")

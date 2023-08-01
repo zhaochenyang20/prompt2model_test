@@ -1,40 +1,30 @@
-import json
 import datasets
 from prompt2model.dataset_processor.textualize import TextualizeProcessor
 from datasets import load_from_disk
+from datasets import load_dataset
 
-import json
+original_dataset = load_dataset("nq_open", split="validation")
 
-# Load the input file
-# import json
+def fiter_function(example):
+    return False if ("None" in example["answer"] or "Null" in example["answer"]) else True
 
-# # Load data from the .jsonl file
-# data = []
-# with open('/dev.jsonl', 'r') as file:
-#     for line in file:
-#         data.append(json.loads(line))
+original_dataset = original_dataset.filter(fiter_function)
 
-# # Process data
-# processed_data = [{'input_col': item['question'], 'output_col': " ".join(item['answer'])} for item in data]
+def join_function(example):
+    new_example = {}
+    new_example["input_col"] = example["question"]
+    new_example["output_col"] = " ".join(example["answer"])
+    return new_example
 
-# from datasets import Dataset
-# import pandas as pd
-
-# # Convert the processed_data list of dictionaries into a DataFrame
-# df = pd.DataFrame(processed_data)
-
-# # Convert the DataFrame into a Hugging Face Dataset
-# hf_dataset = Dataset.from_pandas(df)
-
-
-# hf_dataset.save_to_disk("./datasets/NQ")
-
-real_test_set = load_from_disk("./datasets/NQ")
+joined_dataset = original_dataset.map(join_function)
+joined_dataset.remove_columns(["question", "answer"])
+joined_dataset.save_to_disk("./datasets/NQ")
+joined_dataset = load_from_disk("./datasets/NQ")
 print("orginal")
-print(real_test_set["input_col"][1])
+print(joined_dataset["input_col"][1])
 
 dataset_dict = datasets.DatasetDict(
-    {"test": real_test_set}
+    {"test": joined_dataset}
 )
 DATASET_DICTS = [dataset_dict]
 
