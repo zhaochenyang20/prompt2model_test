@@ -19,7 +19,7 @@ def evaluate_with_gpt(task_name):
     chat_api = ChatGPTAgent()
     outputs = []
     evaluate_length = len(test_dataset)
-    for idx in range(evaluate_length):
+    for idx in range(2908, evaluate_length):
         api_call_counter = 0
         model_input = test_dataset[idx]["model_input"]
         input_col = test_dataset[idx]["input_col"]
@@ -41,7 +41,6 @@ def evaluate_with_gpt(task_name):
                 break
             except OPENAI_ERRORS as e:
                 logging.error(e)
-                time.sleep(1)
     result_dataset = datasets.Dataset.from_dict(
         {
             "input_col": test_dataset["input_col"][:evaluate_length],

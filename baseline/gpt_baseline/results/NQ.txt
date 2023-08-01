@@ -1,0 +1,4 @@
+task_name: NQ
+chr_f++: 23.660156590640085
+exact_match: 0.11662049861495845
+average_bert_score: 0.8472270185432276
