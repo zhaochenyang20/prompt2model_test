@@ -1,6 +1,7 @@
 from datasets import load_from_disk
 from pathlib import Path
 from os import listdir
+import datasets
 from prompt2model.model_trainer.generate import GenerationModelTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompt2model.model_executor import GenerationModelExecutor
@@ -33,30 +34,12 @@ model_name = PRETRAINER_MODEL_NAME
 
 
 def prepare_data():
-    # Read the CSV file using pandas
-    df = pd.read_csv("reviews.csv")
-    # Convert all columns to string
-    df = df.astype(str)
-    # Shuffle the dataset and reset the index
-    df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-    # Split the dataset into train, validation, and test sets
-    train_data, test_data, train_labels, test_labels = train_test_split(
-        df["review_text"], df["rating"], test_size=0.05, random_state=42
+    dataset = load_from_disk(
+        "/home/chenyan3/beta-test/normalization/cached_genrated_dataset/normalization"
     )
-    train_data, val_data, train_labels, val_labels = train_test_split(
-        train_data, train_labels, test_size=0.1, random_state=42
-    )
-
-    # Create the Hugging Face dataset for each split
-    train_dataset = Dataset.from_dict(
-        {"output_col": train_labels.tolist(), "input_col": train_data.tolist()}
-    )
-    val_dataset = Dataset.from_dict(
-        {"output_col": val_labels.tolist(), "input_col": val_data.tolist()}
-    )
-    test_dataset = Dataset.from_dict(
-        {"output_col": test_labels.tolist(), "input_col": test_data.tolist()}
-    )
+    train_dataset = datasets.Dataset.from_dict(dataset[:1500])
+    val_dataset = datasets.Dataset.from_dict(dataset[1500:2000])
+    test_dataset = datasets.Dataset.from_dict(dataset[2000:])
 
     # Create the DatasetDict
     dataset_dict = DatasetDict(
@@ -70,16 +53,16 @@ def prepare_data():
     print(
         dataset_dict["train"]["output_col"][0]
     )  # Print the output of the first example in the training set
-    # dataset_dict.save_to_disk("./review")
 
     DATASET_DICTS = [dataset_dict]
 
-    # INSTRUCTION = (
-    #     "Given a product review, predict the sentiment score associated with it. The sentiment score label ranges from 1 to 5. Just give me the label."
-    # )
-    INSTRUCTION = (
-        "Given a product review, predict the sentiment score associated with it."
-    )
+    INSTRUCTION = """People often uses some temporal date expression in dalegies. I want to know the exact date of all the temporal date expression in some sentences.
+
+For this task, the input is a string contains two specific elements: a posted date as "[Posted: YYYY-MM-DD]" and a sentence or statement with a temporal date reference to a time period (e.g., early December, the end of the year, July, August, last Christmas, next Month, etc).
+
+The output is a string that provides a mapping between the time period references mentioned in the input and the corresponding dates. The output uses the "==" symbol to show the relationship, with the time period reference on the left and the corresponding date on the right. The date is formatted as "YYYY-MM" to represent the year and month.
+"""
+
     opt_tokenizer = AutoTokenizer.from_pretrained(
         PRETRAINER_MODEL_NAME, padding_side="left"
     )
@@ -95,17 +78,15 @@ def prepare_data():
         dataset_dict.save_to_disk(str(store_path))
 
 
-def train(model_name, toy_test=False):
+def train(model_name):
     directories_paths = [
         DATASET_DICTS_STORE_ROOT / d
         for d in listdir(DATASET_DICTS_STORE_ROOT)
         if (DATASET_DICTS_STORE_ROOT / d).is_dir()
     ]
-    training_dataset = load_from_disk(directories_paths[0])["train"]
-    training_datasets = (
-        [Dataset.from_dict(training_dataset[:5000])] if toy_test else [training_dataset]
-    )
-    pretrained_model_name = f"{model_name}"
+    training_datasets = [load_from_disk(directories_paths[0])["train"]]
+    validation_datasets = [load_from_disk(directories_paths[0])["val"]]
+    pretrained_model_name = "facebook/opt-iml-1.3b"
     trainer = GenerationModelTrainer(
         pretrained_model_name, has_encoder=False, tokenizer_max_length=1024
     )
@@ -115,9 +96,9 @@ def train(model_name, toy_test=False):
             "num_train_epochs": 3,
             "per_device_train_batch_size": BATCH_SIZE,
             "save_strategy": "epoch",
-            "evaluation_strategy": "no",
         },
         training_datasets,
+        validation_datasets,
     )
 
     trained_model.save_pretrained(TRAINED_MODEL_ROOT / f"{model_name}")
