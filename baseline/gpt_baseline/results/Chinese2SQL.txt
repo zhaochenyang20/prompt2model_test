@@ -1,0 +1,4 @@
+task_name: Chinese2SQL
+chr_f++: 33.67217691069487
+exact_match: 0.0
+average_bert_score: 0.8914851390070334

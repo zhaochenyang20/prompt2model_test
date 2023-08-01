@@ -26,7 +26,7 @@ def evaluate_with_gpt(task_name):
         while True:
             try:
                 api_call_counter += 1
-                if api_call_counter >= 10:
+                if api_call_counter >= 4:
                     logging.info(f"index: {idx}")
                     logging.info(f"input: {input_col}")
                     logging.info(f"output: None")
