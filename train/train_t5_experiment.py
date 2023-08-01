@@ -13,7 +13,7 @@ from prompt2model.model_evaluator import Seq2SeqEvaluator
 from prompt2model.model_executor import GenerationModelExecutor, ModelOutput
 logging.basicConfig(level=logging.INFO)
 
-def train(model_name, task_name, evaluate=True, realistic=True):
+def train(model_name, task_name, evaluate=True, realistic=False):
     # Read the CSV file using pandas
     logging.info(f"model: {model_name}, task: {task_name}")
     model_store_name = model_name.split("/")[-1]
@@ -161,7 +161,7 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
         )
         test_dataset = load_from_disk(
-        realistic_dataset_root / f"normalization_student_model"
+        realistic_dataset_root / f"{task_name}_student_model"
     )["test"]
         BATCH_SIZE = 4
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
