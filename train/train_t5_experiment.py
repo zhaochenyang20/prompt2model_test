@@ -274,5 +274,5 @@ def main():
     train(args.model_name, args.task_name)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
