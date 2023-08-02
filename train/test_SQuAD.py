@@ -46,13 +46,13 @@ model_executor = GenerationModelExecutor(
 )
 
 # No post-filter
-t5_outputs = model_executor.make_prediction(test_set=test_dataset, input_column="model_input")
+t5_outputs = model_executor.make_prediction(test_set=datasets.Dataset.from_dict(test_dataset[:3000]), input_column="model_input")
 test_dataset = datasets.Dataset.from_dict(
     {
-        'input_col': test_dataset['input_col'],
-        'output_col': test_dataset['output_col'],
-        'model_input': test_dataset['model_input'],
-        'model_output': test_dataset['model_output'],
+        'input_col': test_dataset['input_col'][:3000],
+        'output_col': test_dataset['output_col'][:3000],
+        'model_input': test_dataset['model_input'][:3000],
+        'model_output': test_dataset['model_output'][:3000],
         'output': [each.prediction for each in t5_outputs],
     }
 )

@@ -19,7 +19,8 @@ def evaluate_with_gpt(task_name):
     chat_api = ChatGPTAgent()
     outputs = []
     evaluate_length = len(test_dataset)
-    for idx in range(2908, evaluate_length):
+    # for idx in range(2908, evaluate_length):
+    for idx in range(2908):
         api_call_counter = 0
         model_input = test_dataset[idx]["model_input"]
         input_col = test_dataset[idx]["input_col"]
@@ -50,7 +51,7 @@ def evaluate_with_gpt(task_name):
             "output": outputs,
         }
     )
-    result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
+#     result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
 
     # no post-filter
     GPT_PREDICTIONS = [
@@ -63,26 +64,34 @@ def evaluate_with_gpt(task_name):
         datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
     )
     print(metric_values)
+    from datasets import load_dataset
+    original_dataset = load_dataset("squad", split="validation")
+    counter = 0
+    for idx, each in enumerate(GPT_PREDICTIONS):
+        if each.prediction in original_dataset[idx]["answers"]["text"]:
+            counter += 1
+    exact_match = counter / len(original_dataset)
+    print(exact_match)
     with open(RESULT_PATH / f"{task_name}.txt", "w") as result_file:
         result_file.write(f"task_name: {task_name}\n")
         for metric_name, metric_value in metric_values.items():
             result_file.write(f"{metric_name}: {metric_value}\n")
-
+        result_file.write(f"exact_match: {exact_match}\n")
     #  post-filter
-    filtered_GPT_PREDICTIONS = [
-    ModelOutput(
-        "N/A" if "N/A" in example["output"] else example["output"], auxiliary_info={}
-    ) for example in result_dataset
-]
-    evaluator = Seq2SeqEvaluator()
-    metric_values = evaluator.evaluate_model(
-        datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", filtered_GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
-    )
-    print(metric_values)
-    with open(RESULT_PATH / f"{task_name}_filtered.txt", "w") as result_file:
-        result_file.write(f"task_name: {task_name}\n")
-        for metric_name, metric_value in metric_values.items():
-            result_file.write(f"{metric_name}: {metric_value}\n")
+#     filtered_GPT_PREDICTIONS = [
+#     ModelOutput(
+#         "N/A" if "N/A" in example["output"] else example["output"], auxiliary_info={}
+#     ) for example in result_dataset
+# ]
+#     evaluator = Seq2SeqEvaluator()
+#     metric_values = evaluator.evaluate_model(
+#         datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", filtered_GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
+#     )
+#     print(metric_values)
+#     with open(RESULT_PATH / f"{task_name}_filtered.txt", "w") as result_file:
+#         result_file.write(f"task_name: {task_name}\n")
+#         for metric_name, metric_value in metric_values.items():
+#             result_file.write(f"{metric_name}: {metric_value}\n")
 
 
 def main():
@@ -95,6 +104,20 @@ def main():
     evaluate_with_gpt(args.task_name)
 
 
+def merge_gpt_outputs():
+    test_dataset = load_from_disk(test_dataset_root / f"SQuAD_gpt_model")["test"]
+    outputs = load_from_disk("gpt_output")["output"]
+    result_dataset = datasets.Dataset.from_dict(
+        {
+            "input_col": test_dataset["input_col"],
+            "model_input": test_dataset["model_input"],
+            "output_col": test_dataset["output_col"],
+            "model_output": test_dataset["model_output"],
+            "output": outputs,
+        }
+    )
+    result_dataset.save_to_disk(RESULT_PATH / f"SQuAD_gpt_results")
+
 def fix_empty_response(task_name):
     chat_api = ChatGPTAgent()
     result_dataset = load_from_disk(RESULT_PATH / f"{task_name}_gpt_results")
@@ -104,7 +127,8 @@ def fix_empty_response(task_name):
     model_outputs = result_dataset["model_output"]
     outputs = result_dataset["output"]
     for idx, each in enumerate(outputs):
-        if each == "":
+        if each == "" or each == "None":
+            print(f"None found in {idx}")
             api_call_counter = 0
             while True:
                 try:
@@ -147,6 +171,5 @@ def test_nq():
     print(right_num / len(result_dataset))
 
 
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
