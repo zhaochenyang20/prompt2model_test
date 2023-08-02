@@ -1,0 +1,5 @@
+task_name: SQuAD
+chr_f++: 53.827018728547735
+exact_match: 0.3483443708609272
+average_bert_score: 0.9119379850525617
+exact_match: 0.42119205298013246
