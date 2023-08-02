@@ -1,0 +1,32 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "intent": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "output_col": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question_id": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "input_col": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "model_input": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "model_output": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}
