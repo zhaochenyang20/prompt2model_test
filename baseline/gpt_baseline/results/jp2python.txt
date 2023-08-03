@@ -1,0 +1,4 @@
+task_name: jp2python
+chr_f++: 37.29634847029649
+exact_match: 0.14285714285714285
+average_bert_score: 0.9041492992923373

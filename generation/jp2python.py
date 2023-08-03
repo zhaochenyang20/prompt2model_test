@@ -8,7 +8,7 @@ import logging
 openai.api_key = os.environ["OPENAI_API_KEY"]
 logging.basicConfig(level=logging.INFO)
 
-prompt = """Pythonの1行のコードを生成して、日本のStackOverflowの質問を解決してください。コメントや式は含めないでください。インポート文も不要です。
+prompt = """Pythonで1行のコードを生成し、StackOverflowの日本語の質問を解決してください。コメントや式は含めないでください。インポート文も不要です。
 
 このタスクでは、入力は日本語のテキストで、変数名や操作が記述されています。出力は、そのタスクを達成するためのPythonの1行のコードです。コメントや式は含めないでください。インポート文も不要です。
 
@@ -32,8 +32,8 @@ output="f = open('test.html', 'w') f.write(text.encode('utf-8'))"
 """
 prompt_spec = OpenAIInstructionParser(task_type=TaskType.TEXT_GENERATION)
 prompt_spec.parse_from_prompt(prompt)
-unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=0.3, max_temperature=1, responses_per_request=2, batch_size=3)
+unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=0.5, max_temperature=1.5, responses_per_request=2, batch_size=3)
 generated_dataset = unlimited_dataset_generator.generate_dataset_split(
-    prompt_spec, 200, split=DatasetSplit.TRAIN
+    prompt_spec, 5000, split=DatasetSplit.TRAIN
 )
 generated_dataset.save_to_disk("generated_dataset/jp2python")
