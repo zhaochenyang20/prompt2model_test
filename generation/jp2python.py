@@ -6,7 +6,8 @@ from prompt2model.dataset_generator.openai_gpt import OpenAIDatasetGenerator
 import logging
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("DatasetGenerator")
+logger.setLevel(logging.INFO)
 
 prompt = """Pythonで1行のコードを生成し、StackOverflowの日本語の質問を解決してください。コメントや式は含めないでください。インポート文も不要です。
 
@@ -34,6 +35,6 @@ prompt_spec = OpenAIInstructionParser(task_type=TaskType.TEXT_GENERATION)
 prompt_spec.parse_from_prompt(prompt)
 unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=0.5, max_temperature=1.5, responses_per_request=2, batch_size=3)
 generated_dataset = unlimited_dataset_generator.generate_dataset_split(
-    prompt_spec, 5000, split=DatasetSplit.TRAIN
+    prompt_spec, 50, split=DatasetSplit.TRAIN
 )
 generated_dataset.save_to_disk("generated_dataset/jp2python")
