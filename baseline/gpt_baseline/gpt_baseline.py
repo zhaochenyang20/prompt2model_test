@@ -19,8 +19,7 @@ def evaluate_with_gpt(task_name):
     chat_api = ChatGPTAgent()
     outputs = []
     evaluate_length = len(test_dataset)
-    # for idx in range(2908, evaluate_length):
-    for idx in range(2908):
+    for idx in range(evaluate_length):
         api_call_counter = 0
         model_input = test_dataset[idx]["model_input"]
         input_col = test_dataset[idx]["input_col"]
@@ -51,7 +50,7 @@ def evaluate_with_gpt(task_name):
             "output": outputs,
         }
     )
-#     result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
+    result_dataset.save_to_disk(RESULT_PATH / f"{task_name}_gpt_results")
 
     # no post-filter
     GPT_PREDICTIONS = [
@@ -64,19 +63,10 @@ def evaluate_with_gpt(task_name):
         datasets.Dataset.from_dict(test_dataset[:evaluate_length]), "model_output", GPT_PREDICTIONS, encoder_model_name="xlm-roberta-base"
     )
     print(metric_values)
-    from datasets import load_dataset
-    original_dataset = load_dataset("squad", split="validation")
-    counter = 0
-    for idx, each in enumerate(GPT_PREDICTIONS):
-        if each.prediction in original_dataset[idx]["answers"]["text"]:
-            counter += 1
-    exact_match = counter / len(original_dataset)
-    print(exact_match)
     with open(RESULT_PATH / f"{task_name}.txt", "w") as result_file:
         result_file.write(f"task_name: {task_name}\n")
         for metric_name, metric_value in metric_values.items():
             result_file.write(f"{metric_name}: {metric_value}\n")
-        result_file.write(f"exact_match: {exact_match}\n")
     #  post-filter
 #     filtered_GPT_PREDICTIONS = [
 #     ModelOutput(
