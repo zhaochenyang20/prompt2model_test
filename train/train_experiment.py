@@ -66,15 +66,19 @@ For this task, the input is a Chinese string that describes a natural language q
 
 このタスクでは、入力は日本語のテキストで、変数名や操作が記述されています。出力は、そのタスクを達成するためのPythonの1行のコードです。コメントや式は含めないでください。インポート文も不要です。
 """
-    t5_processor = TextualizeProcessor(has_encoder=True)
-    t5_modified_dataset_dicts = t5_processor.process_dataset_dict(
+    if "bart" in model_store_name:
+        has_encoder = True
+    else:
+        has_encoder = False
+    processor = TextualizeProcessor(has_encoder=has_encoder)
+    modified_dataset_dicts = processor.process_dataset_dict(
         INSTRUCTION, DATASET_DICTS
     )
-    t5_modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
-    training_datasets = [t5_modified_dataset_dicts[0]["train"]]
-    validation_datasets = [t5_modified_dataset_dicts[0]["val"]]
+    modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
+    training_datasets = [modified_dataset_dicts[0]["train"]]
+    validation_datasets = [modified_dataset_dicts[0]["val"]]
     trainer = GenerationModelTrainer(
-        model_name, has_encoder=True, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
+        model_name, has_encoder=has_encoder, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
     )
     # model_max_length 会限制 sentence 的长度，可能会丢失一些特征
     args_output_root = Path(f"/home/chenyan3/result/training_output/{model_store_name}_{task_name}")

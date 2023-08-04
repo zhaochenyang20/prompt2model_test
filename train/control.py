@@ -6,7 +6,8 @@ from pathlib import Path
 logging_root = Path("logs")
 logging_root.mkdir(parents=True, exist_ok=True)
 model_name_list = ["google/flan-t5-base", "google/mt5-base", "facebook/bart-large-cnn"]
-task_name_list = ["normalization", "NQ", "Chinese2SQL", "jp2python"]
+model_name_list = ["facebook/bart-large-cnn", "bigscience/bloomz-1b1", "facebook/opt-iml-max-1.3b"]
+task_name_list = ["normalization", "SQuAD", "jp2python"]
 
 # domenicrosati/QA2D-t5-base, lmqg/flan-t5-base-squad-qag for NQ
 
