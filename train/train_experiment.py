@@ -59,7 +59,7 @@ Your program should output a string that maps the time period references mention
 
 For this task, the input is a Chinese string that describes a natural language query. The output is the corresponding SQL query.
 """
-    elif task_name == "SQuAD":
+    elif "SQuAD" in task_name:
         INSTRUCTION = """Your task is to generate an answer to a natural question. In this task, the input is a string that consists of both a question and a context passage. The context is a descriptive passage related to the question and contains the answer. And the question can range from Math, Cultural, Social, Geometry, Biology, History, Sports, Technology, Science, and so on."""
     elif task_name == "jp2python":
         INSTRUCTION = """Pythonで1行のコードを生成し、StackOverflowの日本語の質問を解決してください。コメントや式は含めないでください。インポート文も不要です。
@@ -125,6 +125,7 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
         metric_values = evaluator.evaluate_model(
             test_dataset, "model_output", t5_outputs, encoder_model_name="xlm-roberta-base"
         )
+        print("generated test set")
         print(metric_values)
         with open(RESULT_PATH / f"{model_store_name}_{task_name}_generated_dataset_without_post_filter.txt", "w") as result_file:
             result_file.write(f"model_name: {model_store_name}\n")
@@ -173,8 +174,9 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
         metric_values = evaluator.evaluate_model(
             test_dataset, "model_output", t5_outputs, encoder_model_name="xlm-roberta-base"
         )
+        print("real evaluation:")
         print(metric_values)
-        if task_name == "SQuAD":
+        if "SQuAD" in task_name:
             from datasets import load_dataset
             original_dataset = load_dataset("squad", split="validation")
             counter = 0
@@ -182,7 +184,7 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
                 if each in original_dataset[idx]["answers"]["text"]:
                     counter += 1
             exact_match = counter / len(original_dataset)
-            print(exact_match)
+            print(f"exact_match: {exact_match}")
 
 def main():
     parser = argparse.ArgumentParser(description="Train the generation model.")
