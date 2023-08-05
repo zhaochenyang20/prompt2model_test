@@ -66,28 +66,32 @@ For this task, the input is a Chinese string that describes a natural language q
 
 このタスクでは、入力は日本語のテキストで、変数名や操作が記述されています。出力は、そのタスクを達成するためのPythonの1行のコードです。コメントや式は含めないでください。インポート文も不要です。
 """
-    t5_processor = TextualizeProcessor(has_encoder=True)
-    t5_modified_dataset_dicts = t5_processor.process_dataset_dict(
+    if "bart" in model_store_name:
+        has_encoder = True
+    else:
+        has_encoder = False
+    processor = TextualizeProcessor(has_encoder=has_encoder)
+    modified_dataset_dicts = processor.process_dataset_dict(
         INSTRUCTION, DATASET_DICTS
     )
-    t5_modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
-    training_datasets = [t5_modified_dataset_dicts[0]["train"]]
-    validation_datasets = [t5_modified_dataset_dicts[0]["val"]]
+    modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
+    training_datasets = [modified_dataset_dicts[0]["train"]]
+    validation_datasets = [modified_dataset_dicts[0]["val"]]
     trainer = GenerationModelTrainer(
-        model_name, has_encoder=True, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280
+        model_name, has_encoder=has_encoder, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
     )
     # model_max_length 会限制 sentence 的长度，可能会丢失一些特征
     args_output_root = Path(f"/home/chenyan3/result/training_output/{model_store_name}_{task_name}")
     args_output_root.mkdir(parents=True, exist_ok=True)
     trained_model, trained_tokenizer = trainer.train_model(
-        {
+        hyperparameter_choices={
             "output_dir": str(args_output_root),
             "num_train_epochs": 10,
             "per_device_train_batch_size": 8,
             "evaluation_strategy": "epoch",
         },
-        training_datasets,
-        validation_datasets,
+        training_datasets=training_datasets,
+        validation_datasets=validation_datasets,
     )
 
     trained_model.save_pretrained(
@@ -133,36 +137,6 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             for metric_name, metric_value in metric_values.items():
                 result_file.write(f"{metric_name}: {metric_value}\n")
 
-#         # post-filter
-#         new_outputs = []
-#         for each in t5_outputs:
-#             if "N/A" in each.prediction:
-#                 print(each.prediction)
-#                 new_output  = ModelOutput(prediction="N/A", auxiliary_info={})
-#             else:
-#                 new_output = ModelOutput(prediction=each.prediction, auxiliary_info={})
-#             new_outputs.append(new_output)
-#         test_dataset = datasets.Dataset.from_dict(
-#             {
-#                 'input_col': test_dataset['input_col'],
-#                 'output_col': test_dataset['output_col'],
-#                 'model_input': test_dataset['model_input'],
-#                 'model_output': test_dataset['model_output'],
-#                 'output': [each.prediction for each in new_outputs],
-#             }
-#         )
-#         test_dataset.save_to_disk(f"{str(DATASET_DICTS_STORE_ROOT)}_generated_test_dataset_with_post_filter")
-#         evaluator = Seq2SeqEvaluator()
-#         metric_values = evaluator.evaluate_model(
-#             test_dataset, "model_output", new_outputs, encoder_model_name="xlm-roberta-base"
-#         )
-#         print(metric_values)
-#         with open(RESULT_PATH / f"{model_store_name}_{task_name}_generated_dataset_with_post_filter.txt", "w") as result_file:
-#             result_file.write(f"model_name: {model_store_name}\n")
-#             result_file.write(f"task_name: {task_name}\n")
-#             result_file.write(f"batch_size: {BATCH_SIZE}\n")
-#             for metric_name, metric_value in metric_values.items():
-#                 result_file.write(f"{metric_name}: {metric_value}\n")
     if realistic:
         realistic_dataset_root = Path(
             "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
@@ -181,7 +155,6 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             t5_model, t5_tokenizer, BATCH_SIZE, tokenizer_max_length=1024, sequence_max_length=1280
         )
 
-
         # No post-filter
         t5_outputs = model_executor.make_prediction(test_set=test_dataset, input_column="model_input")
         test_dataset = datasets.Dataset.from_dict(
@@ -199,69 +172,15 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             test_dataset, "model_output", t5_outputs, encoder_model_name="xlm-roberta-base"
         )
         print(metric_values)
-        # from datasets import load_dataset
-        # original_dataset = load_dataset("squad", split="validation")
-        # counter = 0
-        # for idx, each in enumerate(test_dataset["output"]):
-        #     if each in original_dataset[idx]["answers"]["text"]:
-        #         counter += 1
-        # exact_match = counter / len(original_dataset)
-        # print(exact_match)
-        # with open(RESULT_PATH / f"{model_store_name}_{task_name}_real_dataset_without_post_filter.txt", "w") as result_file:
-        #     result_file.write(f"model_name: {model_store_name}\n")
-        #     result_file.write(f"task_name: {task_name}\n")
-        #     result_file.write(f"batch_size: {BATCH_SIZE}\n")
-        #     for metric_name, metric_value in metric_values.items():
-        #         result_file.write(f"{metric_name}: {metric_value}\n")
-        #     result_file.write(f"exact_match: {exact_match}\n")
-
-        # # post-filter
-        # new_outputs = []
-        # for each in t5_outputs:
-        #     if "N/A" in each.prediction:
-        #         print(each.prediction)
-        #         new_output  = ModelOutput(prediction="N/A", auxiliary_info={})
-        #     else:
-        #         new_output = ModelOutput(prediction=each.prediction, auxiliary_info={})
-        #     new_outputs.append(new_output)
-        # test_dataset = datasets.Dataset.from_dict(
-        #     {
-        #         'input_col': test_dataset['input_col'],
-        #         'output_col': test_dataset['output_col'],
-        #         'model_input': test_dataset['model_input'],
-        #         'model_output': test_dataset['model_output'],
-        #         'output': [each.prediction for each in new_outputs],
-        #     }
-        # )
-        # test_dataset.save_to_disk(f"{str(DATASET_DICTS_STORE_ROOT)}_real_dataset_with_post_filter")
-        # evaluator = Seq2SeqEvaluator()
-        # metric_values = evaluator.evaluate_model(
-        #     test_dataset, "model_output", new_outputs, encoder_model_name="xlm-roberta-base"
-        # )
-        # print(metric_values)
-        # with open(RESULT_PATH / f"{model_store_name}_{task_name}_real_dataset_with_post_filter.txt", "w") as result_file:
-        #     result_file.write(f"model_name: {model_store_name}\n")
-        #     result_file.write(f"task_name: {task_name}\n")
-        #     result_file.write(f"batch_size: {BATCH_SIZE}\n")
-        #     for metric_name, metric_value in metric_values.items():
-        #         result_file.write(f"{metric_name}: {metric_value}\n")
-
-def test_nq(model_name, task_name):
-    logging.info(f"model: {model_name}, task: {task_name}")
-    model_store_name = model_name.split("/")[-1]
-    dataset_root = Path("../generation/generated_dataset/")
-    assert dataset_root.exists()
-    DATASET_DICTS_STORE_ROOT = dataset_root/f"{model_store_name}_{task_name}"
-    result_dataset =  load_from_disk(f"{str(DATASET_DICTS_STORE_ROOT)}_real_dataset_without_post_filter")
-    from datasets import load_dataset
-    dataset = load_dataset("nq_onapen", split="validation")
-    right_num = 0
-    for idx, output in enumerate(result_dataset["output"]):
-        print(output)
-        if output in dataset[idx]["answer"]:
-            right_num += 1
-    print(right_num / len(result_dataset))
-
+        if task_name == "SQuAD":
+            from datasets import load_dataset
+            original_dataset = load_dataset("squad", split="validation")
+            counter = 0
+            for idx, each in enumerate(test_dataset["output"]):
+                if each in original_dataset[idx]["answers"]["text"]:
+                    counter += 1
+            exact_match = counter / len(original_dataset)
+            print(exact_match)
 
 def main():
     parser = argparse.ArgumentParser(description="Train the generation model.")
@@ -279,5 +198,5 @@ def main():
     train(args.model_name, args.task_name)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

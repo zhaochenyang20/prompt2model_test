@@ -6,7 +6,17 @@ from prompt2model.dataset_generator.openai_gpt import OpenAIDatasetGenerator
 import logging
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
-logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger("DatasetGenerator")
+logger.setLevel(logging.INFO)
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
+ch = logging.StreamHandler()
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 prompt = """
 Your task is to generate an answer to a natural question. In this task, the input is a string that consists of both a question and a context passage. The context is a descriptive passage related to the question and contains the answer. And the question can range from Math, Cultural, Social, Geometry, Biology, History, Sports, Technology, Science, and so on.
@@ -25,8 +35,8 @@ output="Europe"
 
 prompt_spec = OpenAIInstructionParser(task_type=TaskType.TEXT_GENERATION)
 prompt_spec.parse_from_prompt(prompt)
-unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=0.4, max_temperature=1.7, responses_per_request=5, batch_size=5, requests_per_minute=20)
+unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=1.4, max_temperature=1.4, responses_per_request=5, batch_size=5, requests_per_minute=70, filter_duplicated_examples=False)
 dataset = unlimited_dataset_generator.generate_dataset_split(
     prompt_spec, 5000, split=DatasetSplit.TRAIN
 )
-dataset.save_to_disk("./generated_dataset/SQuAD")
+dataset.save_to_disk("./generated_dataset/SQuAD_1.4_1.4_without_filtering")
