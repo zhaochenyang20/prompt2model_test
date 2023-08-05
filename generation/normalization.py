@@ -64,12 +64,12 @@ output="N/A"
 prompt_spec = OpenAIInstructionParser(task_type=TaskType.TEXT_GENERATION)
 prompt_spec.parse_from_prompt(prompt)
 unlimited_dataset_generator = OpenAIDatasetGenerator(
-    temperature=1.4, requests_per_minute=90, responses_per_request=5
+    init_temperature=0.3, max_temperature=1.4, requests_per_minute=90, responses_per_request=5, filter_duplicated_examples=True
 )
 normalized_dataset = unlimited_dataset_generator.generate_dataset_split(
     prompt_spec, 5000, split=DatasetSplit.TRAIN
 )
-normalized_dataset.save_to_disk("normalized_dataset_5000")
+normalized_dataset.save_to_disk("./generated_dataset/normalization_0.3_1.4_with_filtering")
 
 def post_filter(normalized_dataset):
     def filter_output(example):
