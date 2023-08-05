@@ -138,8 +138,14 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
         )
         print(str(realistic_dataset_root))
+        if "SQuAD" in task_name:
+            real_task_name = "SQuAD"
+        elif "normalization" in task_name:
+            real_task_name = "normalization"
+        elif "jp2python" in task_name:
+            real_task_name = "jp2python"
         test_dataset = load_from_disk(
-        realistic_dataset_root / f"{task_name}_student_model"
+        realistic_dataset_root / f"{real_task_name}_student_model"
     )["test"]
         BATCH_SIZE = 8
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -9,7 +9,7 @@ model_name_list = ['facebook/bart-large-cnn',
  'pszemraj/led-base-book-summary',
  'pszemraj/long-t5-tglobal-base-16384-book-summary',
  'pszemraj/led-large-book-summary',]
-task_name_list = ["normalization", "SQuAD", "jp2python"]
+task_name_list = ["normalization_0.3_1.4_with_filtering", "SQuAD_0.3_1.4_with_filtering", "jp2python"]
 
 # domenicrosati/QA2D-t5-base, lmqg/flan-t5-base-squad-qag for NQ
 
