@@ -35,8 +35,8 @@ output="Europe"
 
 prompt_spec = OpenAIInstructionParser(task_type=TaskType.TEXT_GENERATION)
 prompt_spec.parse_from_prompt(prompt)
-unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=0.3, max_temperature=1.4, responses_per_request=5, batch_size=5, requests_per_minute=70, filter_duplicated_examples=False)
+unlimited_dataset_generator = OpenAIDatasetGenerator(initial_temperature=1.4, max_temperature=1.4, responses_per_request=5, batch_size=5, requests_per_minute=70, filter_duplicated_examples=False)
 dataset = unlimited_dataset_generator.generate_dataset_split(
     prompt_spec, 5000, split=DatasetSplit.TRAIN
 )
-dataset.save_to_disk("./generated_dataset/SQuAD_03._1.4_without_filtering")
+dataset.save_to_disk("./generated_dataset/SQuAD_1.4_1.4_without_filtering")
