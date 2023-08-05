@@ -66,19 +66,15 @@ For this task, the input is a Chinese string that describes a natural language q
 
 このタスクでは、入力は日本語のテキストで、変数名や操作が記述されています。出力は、そのタスクを達成するためのPythonの1行のコードです。コメントや式は含めないでください。インポート文も不要です。
 """
-    if "bart" in model_store_name:
-        has_encoder = True
-    else:
-        has_encoder = False
-    processor = TextualizeProcessor(has_encoder=has_encoder)
-    modified_dataset_dicts = processor.process_dataset_dict(
+    t5_processor = TextualizeProcessor(has_encoder=True)
+    t5_modified_dataset_dicts = t5_processor.process_dataset_dict(
         INSTRUCTION, DATASET_DICTS
     )
-    modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
-    training_datasets = [modified_dataset_dicts[0]["train"]]
-    validation_datasets = [modified_dataset_dicts[0]["val"]]
+    t5_modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
+    training_datasets = [t5_modified_dataset_dicts[0]["train"]]
+    validation_datasets = [t5_modified_dataset_dicts[0]["val"]]
     trainer = GenerationModelTrainer(
-        model_name, has_encoder=has_encoder, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
+        model_name, has_encoder=True, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
     )
     # model_max_length 会限制 sentence 的长度，可能会丢失一些特征
     args_output_root = Path(f"/home/chenyan3/result/training_output/{model_store_name}_{task_name}")
@@ -142,8 +138,14 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
             "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
         )
         print(str(realistic_dataset_root))
+        if "SQuAD" in task_name:
+            real_task_name = "SQuAD"
+        elif "normalization" in task_name:
+            real_task_name = "normalization"
+        elif "jp2python" in task_name:
+            real_task_name = "jp2python"
         test_dataset = load_from_disk(
-        realistic_dataset_root / f"{task_name}_student_model"
+        realistic_dataset_root / f"{real_task_name}_student_model"
     )["test"]
         BATCH_SIZE = 8
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
