@@ -74,7 +74,7 @@ For this task, the input is a Chinese string that describes a natural language q
     training_datasets = [t5_modified_dataset_dicts[0]["train"]]
     validation_datasets = [t5_modified_dataset_dicts[0]["val"]]
     trainer = GenerationModelTrainer(
-        model_name, has_encoder=True, executor_batch_size=10, tokenizer_max_length=1024, sequence_max_length=1280,
+        model_name, has_encoder=True, executor_batch_size=4, tokenizer_max_length=1024, sequence_max_length=1280,
     )
     # model_max_length 会限制 sentence 的长度，可能会丢失一些特征
     args_output_root = Path(f"/home/chenyan3/result/training_output/{model_store_name}_{task_name}")
@@ -83,7 +83,7 @@ For this task, the input is a Chinese string that describes a natural language q
         hyperparameter_choices={
             "output_dir": str(args_output_root),
             "num_train_epochs": 10,
-            "per_device_train_batch_size": 8,
+            "per_device_train_batch_size": 4,
             "evaluation_strategy": "epoch",
         },
         training_datasets=training_datasets,
@@ -99,7 +99,7 @@ For this task, the input is a Chinese string that describes a natural language q
     if evaluate:
         dataset_dict = load_from_disk(DATASET_DICTS_STORE_ROOT)
         test_dataset = dataset_dict["test"]
-        BATCH_SIZE = 8
+        BATCH_SIZE = 4
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         t5_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
 TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
@@ -148,7 +148,7 @@ TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
         test_dataset = load_from_disk(
         realistic_dataset_root / f"{real_task_name}_student_model"
     )["test"]
-        BATCH_SIZE = 8
+        BATCH_SIZE = 4
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         t5_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
 TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
