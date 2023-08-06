@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def train(evaluate=True, realistic=True):
-    model_name = "google/flan-t5-base"
+    model_name = "google/mt5-base"
     task_name = "jp2python"
     logging.info(f"model: {model_name}, task: {task_name}")
     model_store_name = model_name.split("/")[-1]
