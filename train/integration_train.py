@@ -3,7 +3,7 @@ from pathlib import Path
 import datasets
 from prompt2model.model_trainer.generate import GenerationModelTrainer
 from prompt2model.dataset_processor.textualize import TextualizeProcessor
-from datasets import DatasetDict
+from datasets import DatasetDict, concatenate_datasets
 from pathlib import Path
 import logging
 import torch
@@ -15,17 +15,16 @@ from prompt2model.model_executor import GenerationModelExecutor, ModelOutput
 logging.basicConfig(level=logging.INFO)
 
 
-def train(model_name, task_name, evaluate=True, realistic=True):
-    # Read the CSV file using pandas
+def train(evaluate=True, realistic=True):
+    model_name = "google/flan-t5-base"
+    task_name = "jp2python"
     logging.info(f"model: {model_name}, task: {task_name}")
     model_store_name = model_name.split("/")[-1]
     dataset_root = Path("../generation/generated_dataset/")
     assert dataset_root.exists()
-    DATASET_DICTS_STORE_ROOT = dataset_root / f"{model_store_name}_{task_name}"
     TRAINED_MODEL_ROOT = Path("/home/chenyan3/result/trained_model")
     TRAINED_TOKENIZER_ROOT = Path("/home/chenyan3/result/trained_tokenizer")
     RESULT_PATH = Path(f"/home/chenyan3/result/{model_store_name}_{task_name}")
-    DATASET_DICTS_STORE_ROOT.mkdir(parents=True, exist_ok=True)
     TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
     TRAINED_TOKENIZER_ROOT.mkdir(parents=True, exist_ok=True)
     RESULT_PATH.mkdir(parents=True, exist_ok=True)
@@ -39,7 +38,7 @@ def train(model_name, task_name, evaluate=True, realistic=True):
         {"train": train_dataset, "val": val_dataset, "test": test_dataset}
     )
 
-    DATASET_DICTS = [dataset_dict]
+    DATASET_DICTS = [dataset_dict, load_from_disk(dataset_root / "retrived_jp2python")]
 
     if "normalization" in task_name:
         INSTRUCTION = """Temporal date expressions are commonly used to refer to specific time periods. Your task is to identify these temporal date expressions and provide the exact dates they refer to.
@@ -64,21 +63,27 @@ For this task, the input is a Chinese string that describes a natural language q
     elif "SQuAD" in task_name:
         INSTRUCTION = """Your task is to generate an answer to a natural question. In this task, the input is a string that consists of both a question and a context passage. The context is a descriptive passage related to the question and contains the answer. And the question can range from Math, Cultural, Social, Geometry, Biology, History, Sports, Technology, Science, and so on."""
     elif task_name == "jp2python":
-        INSTRUCTION = """Pythonで1行のコードを生成し、StackOverflowの日本語の質問を解決してください。コメントや式は含めないでください。インポート文も不要です。
-
-このタスクでは、入力は日本語のテキストで、変数名や操作が記述されています。出力は、そのタスクを達成するためのPythonの1行のコードです。コメントや式は含めないでください。インポート文も不要です。
-"""
+        INSTRUCTION = """Please generate code that satisfies a Japanese StackOverflow question. Please generate only code - no supporting text or explanations. For most queries, the correct code will be a single line of Python code. Do not import any libraries. Do not return any variables or store the answer to a variable; just having a line that evaluates to the correct answer is sufficient."""
     t5_processor = TextualizeProcessor(has_encoder=True)
     t5_modified_dataset_dicts = t5_processor.process_dataset_dict(
         INSTRUCTION, DATASET_DICTS
     )
-    t5_modified_dataset_dicts[0].save_to_disk(DATASET_DICTS_STORE_ROOT)
-    training_datasets = [t5_modified_dataset_dicts[0]["train"]]
-    validation_datasets = [t5_modified_dataset_dicts[0]["val"]]
+    training_datasets = [
+        t5_modified_dataset_dicts[0]["train"],
+        t5_modified_dataset_dicts[1]["train"],
+    ]
+    validation_datasets = [
+        t5_modified_dataset_dicts[0]["val"],
+        t5_modified_dataset_dicts[1]["val"],
+    ]
+    test_datasets = [
+        t5_modified_dataset_dicts[0]["test"],
+        t5_modified_dataset_dicts[1]["test"],
+    ]
     trainer = GenerationModelTrainer(
         model_name,
         has_encoder=True,
-        executor_batch_size=4,
+        executor_batch_size=8,
         tokenizer_max_length=1024,
         sequence_max_length=1280,
     )
@@ -91,7 +96,7 @@ For this task, the input is a Chinese string that describes a natural language q
         hyperparameter_choices={
             "output_dir": str(args_output_root),
             "num_train_epochs": 10,
-            "per_device_train_batch_size": 4,
+            "per_device_train_batch_size": 8,
             "evaluation_strategy": "epoch",
         },
         training_datasets=training_datasets,
@@ -105,9 +110,8 @@ For this task, the input is a Chinese string that describes a natural language q
         TRAINED_TOKENIZER_ROOT / f"{model_store_name}_{task_name}"
     )
     if evaluate:
-        dataset_dict = load_from_disk(DATASET_DICTS_STORE_ROOT)
-        test_dataset = dataset_dict["test"]
-        BATCH_SIZE = 4
+        test_dataset = concatenate_datasets()
+        BATCH_SIZE = 8
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         t5_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
@@ -137,7 +141,7 @@ For this task, the input is a Chinese string that describes a natural language q
             }
         )
         test_dataset.save_to_disk(
-            f"{str(DATASET_DICTS_STORE_ROOT)}_generated_test_dataset_without_post_filter"
+            "jp2python_on_testset"
         )
         evaluator = Seq2SeqEvaluator()
         metric_values = evaluator.evaluate_model(
@@ -150,7 +154,7 @@ For this task, the input is a Chinese string that describes a natural language q
         print(metric_values)
         with open(
             RESULT_PATH
-            / f"{model_store_name}_{task_name}_generated_dataset_without_post_filter.txt",
+            / f"{task_name}_generated_dataset_without_post_filter.txt",
             "w",
         ) as result_file:
             result_file.write(f"model_name: {model_store_name}\n")
@@ -173,7 +177,7 @@ For this task, the input is a Chinese string that describes a natural language q
         test_dataset = load_from_disk(
             realistic_dataset_root / f"{real_task_name}_student_model"
         )["test"]
-        BATCH_SIZE = 4
+        BATCH_SIZE = 8
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         t5_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             TRAINED_MODEL_ROOT / f"{model_store_name}_{task_name}"
@@ -203,7 +207,7 @@ For this task, the input is a Chinese string that describes a natural language q
             }
         )
         test_dataset.save_to_disk(
-            f"{str(DATASET_DICTS_STORE_ROOT)}_real_dataset_without_post_filter"
+            f"jp2python_on_real_dataset"
         )
         evaluator = Seq2SeqEvaluator()
         metric_values = evaluator.evaluate_model(
@@ -226,21 +230,5 @@ For this task, the input is a Chinese string that describes a natural language q
             print(f"exact_match: {exact_match}")
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Train the generation model.")
-    parser.add_argument(
-        "--model_name",
-        type=str,
-        required=True,
-        help="Name or path of the pre-trained model to use.",
-    )
-    parser.add_argument(
-        "--task_name", type=str, required=True, help="Name of the task."
-    )
-    args = parser.parse_args()
-
-    train(args.model_name, args.task_name)
-
-
 if __name__ == "__main__":
-    main()
+    train()
