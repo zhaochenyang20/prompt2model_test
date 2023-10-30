@@ -13,8 +13,8 @@ def join_function(example):
 
 joined_dataset = original_dataset.map(join_function)
 joined_dataset.remove_columns(["question", "answers"])
-joined_dataset = datasets.Dataset.from_dict(joined_dataset[:1000])
-joined_dataset.save_to_disk("./testdataset/SQuAD_transformed")
+joined_dataset = datasets.Dataset.from_dict(joined_dataset[1000:6000])
+joined_dataset.save_to_disk("./testdataset/SQuAD_transformed_train")
 
 
 
