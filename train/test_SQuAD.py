@@ -11,6 +11,7 @@ import argparse
 import transformers
 from prompt2model.model_evaluator import Seq2SeqEvaluator
 from prompt2model.model_executor import GenerationModelExecutor, ModelOutput
+from prompt2model.utils.path import TEST_DATA_ROOT
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +32,7 @@ TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
 TRAINED_TOKENIZER_ROOT.mkdir(parents=True, exist_ok=True)
 RESULT_PATH.mkdir(parents=True, exist_ok=True)
 realistic_dataset_root = Path(
-    "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
+    TEST_DATA_ROOT + "/prompt2model_test/baseline/real_datasets/datasets"
 )
 test_dataset = load_from_disk(realistic_dataset_root / f"SQuAD_student_model")["test"]
 BATCH_SIZE = 200
@@ -71,7 +72,6 @@ evaluator = Seq2SeqEvaluator()
 metric_values = evaluator.evaluate_model(
     test_dataset, "model_output", t5_outputs, encoder_model_name="xlm-roberta-base"
 )
-print(metric_values)
 with open(
     RESULT_PATH / f"{model_store_name}_SQuAD_real_dataset_without_post_filter.txt", "w"
 ) as result_file:

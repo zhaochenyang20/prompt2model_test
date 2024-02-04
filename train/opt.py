@@ -47,12 +47,12 @@ def prepare_data():
     )
 
     # Access the data in the DatasetDict
-    print(
-        dataset_dict["train"]["input_col"][0]
-    )  # Print the input of the first example in the training set
-    print(
-        dataset_dict["train"]["output_col"][0]
-    )  # Print the output of the first example in the training set
+    # print(
+    #     dataset_dict["train"]["input_col"][0]
+    # )  # Print the input of the first example in the training set
+    # print(
+    #     dataset_dict["train"]["output_col"][0]
+    # )  # Print the output of the first example in the training set
 
     DATASET_DICTS = [dataset_dict]
 

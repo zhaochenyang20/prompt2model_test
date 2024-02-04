@@ -11,6 +11,7 @@ import argparse
 import transformers
 from prompt2model.model_evaluator import Seq2SeqEvaluator
 from prompt2model.model_executor import GenerationModelExecutor, ModelOutput
+from prompt2model.utils.path import TEST_DATA_ROOT
 
 logging.basicConfig(level=logging.INFO)
 
@@ -165,7 +166,7 @@ For this task, the input is a Chinese string that describes a natural language q
 
     if realistic:
         realistic_dataset_root = Path(
-            "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
+            TEST_DATA_ROOT + "/prompt2model_test/baseline/real_datasets/datasets"
         )
         print(str(realistic_dataset_root))
         if "SQuAD" in task_name:

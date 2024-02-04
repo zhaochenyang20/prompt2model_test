@@ -9,8 +9,9 @@ from prompt2model.utils import OPENAI_ERRORS
 import time
 logging.basicConfig(level=logging.INFO)
 from prompt2model.model_executor import ModelOutput
+from prompt2model.utils.path import TEST_DATA_ROOT
 
-test_dataset_root = Path("/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets")
+test_dataset_root = Path(TEST_DATA_ROOT + "/prompt2model_test/baseline/real_datasets/datasets")
 RESULT_PATH = Path("results")
 RESULT_PATH.mkdir(parents=True, exist_ok=True)
 

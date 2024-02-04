@@ -6,6 +6,7 @@ import argparse
 import transformers
 from prompt2model.model_evaluator import Seq2SeqEvaluator
 from prompt2model.model_executor import GenerationModelExecutor
+from prompt2model.utils.path import TEST_DATA_ROOT
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +19,7 @@ def evaluate(model_name, task_name):
         "/home/chenyan3/beta-test/train/result/trained_tokenizer"
     )
     DATASET_DICTS_STORE_ROOT = Path(
-        "/home/chenyan3/prompt2model_test/baseline/real_datasets/datasets"
+        TEST_DATA_ROOT+"/prompt2model_test/baseline/real_datasets/datasets"
     )
     RESULT_PATH = Path(f"./result")
     TRAINED_MODEL_ROOT.mkdir(parents=True, exist_ok=True)
