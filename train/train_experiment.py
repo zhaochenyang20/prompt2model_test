@@ -11,7 +11,7 @@ import argparse
 import transformers
 from prompt2model.model_evaluator import Seq2SeqEvaluator
 from prompt2model.model_executor import GenerationModelExecutor, ModelOutput
-from prompt2model.utils.path import TEST_DATA_ROOT
+tmux lsfrom prompt2model.utils.path import TEST_DATA_ROOT
 
 logging.basicConfig(level=logging.INFO)
 
